@@ -1,5 +1,4 @@
 <?php
-// Démarrer une session pour stocker les packages
 
 session_start();
 require ' php\db.php'; 
