@@ -1,8 +1,8 @@
 <?php
 $host = 'localhost';
 $db = 'packages_db';
-$user = 'root'; // Remplacez par votre nom d'utilisateur MySQL
-$password = ''; // Remplacez par votre mot de passe MySQL
+$user = 'root'; 
+$password = ''; 
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $password);
