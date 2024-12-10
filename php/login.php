@@ -1,60 +1,67 @@
 <?php
 session_start();
-require './db.php';
+include('db.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Retrieve form input values
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $query = $pdo->prepare("SELECT * FROM Users WHERE username = :username AND password = :password");
-    $query->execute(['username' => $username, 'password' => $password]);
+    // Prepare query to fetch the user with the given username
+    $query = $pdo->prepare("SELECT * FROM Users WHERE username = :username");
+    $query->execute(['username' => $username]);
     $user = $query->fetch();
 
-    if ($user) {
+    // Check if user exists and verify password
+    if ($user && password_verify($password, $user['password'])) {
+        // Store session variables
         $_SESSION['username'] = $user['username'];
         $_SESSION['role'] = $user['role'];
 
+        // Redirect to the appropriate page based on user role
         if ($user['role'] === 'admin') {
             header('Location: admin.php');
+            exit;
         } else {
             header('Location: user.php');
+            exit;
         }
     } else {
-        $error = "cest invalid!";
+        $error = "Invalid username or password!";
     }
 }
 ?>
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Page</title>
-    <link rel="stylesheet" href="../../css/output.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
 <body class="bg-primary text-white font-jura">
     <div class="container mx-auto p-6">
         <!-- Login Section -->
         <div class="flex justify-center items-center">
-            <!-- Illustration -->
+            <!-- Illustration (Optional) -->
             <div class="w-1/3 hidden lg:block">
-
+                <!-- You can add an illustration here -->
             </div>
             <!-- Form -->
             <div id="loginFormSection" class="bg-black p-10 rounded-lg shadow-md w-full max-w-md">
                 <h2 class="text-3xl font-bold mb-6 text-center">Login Page</h2>
 
-                <form id="loginForm">
-                    <input type="email" id="email" placeholder="Your Email"
-                        class="w-full p-3 mb-4 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <input type="password" id="password" placeholder="Password"
-                        class="w-full p-3 mb-4 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <?php if (isset($error)): ?>
+                    <div class="text-red-500 text-center mb-4"><?php echo $error; ?></div>
+                <?php endif; ?>
 
-                    <div class="text-right mb-4">
-                        <a href="#" id="forgotPasswordLink" class="text-blue-500 hover:underline">Forgot Password?</a>
-                    </div>
+                <form method="POST" action="">
+                    <input type="text" name="username" placeholder="Your Username"
+                        class="w-full p-3 mb-4 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+
+                    <input type="password" name="password" placeholder="Password"
+                        class="w-full p-3 mb-4 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+
                     <div class="flex items-center mb-4">
                         <input type="checkbox" id="terms" class="mr-2">
                         <label for="terms" class="text-sm">
@@ -62,33 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 href="#" class="text-blue-500 hover:underline">Terms of Service</a>.
                         </label>
                     </div>
-                    <a id="sub_but" href="">
-                        <button type="submit"
-                        class="w-full bg-red-500 py-3 rounded text-lg font-semibold hover:bg-red-600">Login</button>
-                    </a >
-                </form>
-            </div>
-            <!-- Reset Password Section (hidden initially) -->
-            <div id="resetPasswordSection" class="bg-black p-10 rounded-lg shadow-md w-full max-w-md hidden">
-                <h2 class="text-3xl font-bold mb-6 text-center">Reset Your Password</h2>
-
-                <form id="resetPasswordForm">
-                    <input type="email" id="resetEmail" placeholder="Enter Your Email"
-                        class="w-full p-3 mb-4 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <input type="password" id="newPassword" placeholder="New Password"
-                        class="w-full p-3 mb-4 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <input type="password" id="confirmNewPassword" placeholder="Confirm Your New Password"
-                        class="w-full p-3 mb-4 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
-
                     <button type="submit"
-                        class="w-full bg-green-500 py-3 rounded text-lg font-semibold hover:bg-green-600">Reset
-                        Password</button>
+                        class="w-full bg-red-500 py-3 rounded text-lg font-semibold hover:bg-red-600">Login</button>
                 </form>
-
-                <div class="text-center mt-4">
-                    <a href="#" id="backToLoginLink" class="text-blue-500 hover:underline">Back to Login</a>
-                </div>
             </div>
         </div>
     </div>
-   </html>
+</body>
+</html>

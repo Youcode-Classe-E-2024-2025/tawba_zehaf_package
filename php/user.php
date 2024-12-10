@@ -1,6 +1,5 @@
 <?php
 require './db.php';
-
 // Search functionality
 $query = $_GET['query'] ?? '';
 
@@ -54,7 +53,7 @@ $packages = $stmt->fetchAll();
                 <div class="col-span-3">
                     <button type="submit" name="add_or_update" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"><?php echo $isEditing ? 'Modifier' : 'Ajouter'; ?></button>
                     <?php if ($isEditing): ?>
-                        <a href="packages.php" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">Annuler</a>
+                        <a href="php\packages.php" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">Annuler</a>
                     <?php endif; ?>
                 </div>
             </form>

@@ -4,7 +4,7 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
     header('Location: login.php');
     exit();
 }
-require 'php\db.php';
+include('php\db.php') ;
 
 // Handle package addition
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_package'])) {
