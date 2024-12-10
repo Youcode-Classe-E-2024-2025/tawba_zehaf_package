@@ -2,98 +2,78 @@
 require './db.php';
 // Search functionality
 $query = $_GET['query'] ?? '';
-
-// Fetch packages with their version and authors
-
 $stmt = $pdo->prepare("
-    SELECT p.id_packages, p.name AS nom_package, p.description, 
-           MAX(v.version_number) AS version, GROUP_CONCAT(a.name) AS authors
+    SELECT p.id_package, p.nom_package, p.description, 
+           MAX(v.version) AS version, GROUP_CONCAT(a.nom_auteur) AS authors
     FROM packages p
-    LEFT JOIN versions v ON p.id_packages = v.package_id
-    LEFT JOIN authors a ON p.author_id = a.id_authors
-    WHERE p.name LIKE :query OR p.description LIKE :query
-    GROUP BY p.id_packages, p.name, p.description
-    ORDER BY p.name
+    LEFT JOIN versions v ON p.id_package = v.id_package
+    LEFT JOIN auteurs_packages ap ON p.id_package = ap.id_package
+    LEFT JOIN auteurs a ON ap.id_auteur = a.id_auteur
+    WHERE p.nom_package LIKE :query OR p.description LIKE :query
+    GROUP BY p.id_package, p.nom_package, p.description
+    ORDER BY p.nom_package
 ");
+
 $stmt->execute(['query' => "%$query%"]);
 $packages = $stmt->fetchAll();
+
+// Output or render your packages here
 ?>
 
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Packages JS</title>
+    <title>User Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 text-gray-800">
-    <header class="bg-blue-600 text-white py-4">
-        <h1 class="text-center text-2xl font-bold">Gestion des Packages JS</h1>
+
+<body class="bg-gray-900 text-gray-100 font-sans">
+
+    <header class="bg-blue-600 text-white p-6 text-center shadow-lg">
+        <h1 class="text-3xl font-bold">Welcome, User!</h1>
     </header>
 
-    <main class="container mx-auto mt-8">
-        <!-- Formulaire pour ajouter ou modifier un package -->
-        <section class="bg-white p-6 shadow-md rounded-lg mb-6">
-            <h2 class="text-lg font-semibold mb-4"><?php echo $isEditing ? 'Modifier' : 'Ajouter'; ?> un package</h2>
-            <form method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input type="hidden" name="editing_index" value="<?php echo $isEditing ? $editingIndex : ''; ?>">
-                <div>
-                    <label for="package_name" class="block text-sm font-medium text-gray-700">Nom du Package</label>
-                    <input type="text" id="package_name" name="package_name" value="<?php echo $name; ?>" class="mt-1 p-2 border border-gray-300 rounded-md w-full" required>
-                </div>
-                <div>
-                    <label for="package_author" class="block text-sm font-medium text-gray-700">Auteur</label>
-                    <input type="text" id="package_author" name="package_author" value="<?php echo $author; ?>" class="mt-1 p-2 border border-gray-300 rounded-md w-full" required>
-                </div>
-                <div>
-                    <label for="package_version" class="block text-sm font-medium text-gray-700">Version</label>
-                    <input type="text" id="package_version" name="package_version" value="<?php echo $version; ?>" class="mt-1 p-2 border border-gray-300 rounded-md w-full" required>
-                </div>
-                <div class="col-span-3">
-                    <button type="submit" name="add_or_update" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"><?php echo $isEditing ? 'Modifier' : 'Ajouter'; ?></button>
-                    <?php if ($isEditing): ?>
-                        <a href="php\packages.php" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">Annuler</a>
-                    <?php endif; ?>
-                </div>
+    <div class="container mx-auto p-6 mt-6 bg-gray-800 rounded-lg shadow-lg">
+        <a href="logout.php" class="block text-center text-white bg-red-600 py-2 px-4 rounded-lg mb-4 hover:bg-red-700 transition">Logout</a>
+        
+        <!-- Search Bar -->
+        <div class="flex justify-center mb-6">
+            <form method="GET" action="user.php" class="flex">
+                <input type="text" name="query" placeholder="Search packages"
+                    class="w-80 p-3 rounded-l-lg bg-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value="<?php echo htmlspecialchars($query ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <button type="submit" class="p-3 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 transition">Search</button>
             </form>
-        </section>
+        </div>
 
-        <!-- Liste des packages -->
-        <section class="bg-white p-6 shadow-md rounded-lg">
-            <h2 class="text-lg font-semibold mb-4">Liste des Packages</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full bg-gray-50 border border-gray-200 rounded-lg">
-                    <thead class="bg-blue-600 text-white">
-                        <tr>
-                            <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Nom</th>
-                            <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Auteur</th>
-                            <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Version</th>
-                            <th class="py-3 px-4"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($_SESSION['packages'] as $index => $package): ?>
-                            <tr>
-                                <td class="py-3 px-4 border-b"><?php echo htmlspecialchars($package['name']); ?></td>
-                                <td class="py-3 px-4 border-b"><?php echo htmlspecialchars($package['author']); ?></td>
-                                <td class="py-3 px-4 border-b"><?php echo htmlspecialchars($package['version']); ?></td>
-                                <td class="py-3 px-4 border-b text-right">
-                                    <form method="POST" class="inline">
-                                        <input type="hidden" name="index" value="<?php echo $index; ?>">
-                                        <button type="submit" name="edit" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600">Modifier</button>
-                                    </form>
-                                    <form method="POST" class="inline">
-                                        <input type="hidden" name="index" value="<?php echo $index; ?>">
-                                        <button type="submit" name="delete" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">Supprimer</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </main>
+        <!-- Add Package Button -->
+        <div class="flex justify-end mb-6">
+            <a href="add_package.php" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">Add Package</a>
+        </div>
+
+        <h2 class="text-xl font-semibold mb-4">Packages</h2>
+        
+        <!-- Package List -->
+        <ul class="space-y-4">
+            <?php foreach ($packages as $package): ?>
+                <li class="bg-gray-700 p-6 rounded-lg shadow-md hover:shadow-xl transition">
+                    <h3 class="text-2xl font-semibold"><?php echo htmlspecialchars($package['nom_package'] ?? '', ENT_QUOTES, 'UTF-8'); ?></h3>
+                    <em class="text-sm text-gray-400">Version: <?php echo htmlspecialchars($package['version'] ?? '', ENT_QUOTES, 'UTF-8'); ?></em><br>
+                    <em class="text-sm text-gray-400">Authors: <?php echo htmlspecialchars($package['authors'] ?? '', ENT_QUOTES, 'UTF-8'); ?></em><br>
+                    <p class="mt-4"><?php echo nl2br(htmlspecialchars($package['description'] ?? '', ENT_QUOTES, 'UTF-8')); ?></p>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+
+    <footer class="bg-blue-600 text-white text-center py-4 mt-6">
+        <p>&copy; 2024 Package Management System</p>
+    </footer>
+
 </body>
+
 </html>
+
