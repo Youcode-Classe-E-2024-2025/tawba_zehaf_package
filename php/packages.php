@@ -1,5 +1,4 @@
 <?php
-
 session_start();
 require ' php\db.php'; 
 // Initialiser les packages si non définis
