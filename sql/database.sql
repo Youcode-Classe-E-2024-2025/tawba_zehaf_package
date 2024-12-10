@@ -1,12 +1,12 @@
  CREATE DATABASE packages_db;
 CREATE TABLE authors (
-    id INT  AUTO_INCREMENT PRIMARY KEY,
+    id_authors INT  AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL
 );
 -- packages tables
 CREATE TABLE packages (
-    id INT AUTO_INCREMENT PRIMARY KEY,  
+    id_packages INT AUTO_INCREMENT PRIMARY KEY,  
     name VARCHAR(150) UNIQUE NOT NULL,
     description TEXT,
     creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,  
@@ -16,7 +16,7 @@ CREATE TABLE packages (
 
 -- versions table
 CREATE TABLE versions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_versions INT AUTO_INCREMENT PRIMARY KEY,
     package_id INT NOT NULL,
     version_number VARCHAR(25) NOT NULL,
     release_date DATETIME DEFAULT CURRENT_TIMESTAMP,  
