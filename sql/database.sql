@@ -1,6 +1,4 @@
- CREATE DATABASE package_manager;
-
-
+ CREATE DATABASE packages_db;
 CREATE TABLE authors (
     id INT  AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -11,18 +9,17 @@ CREATE TABLE packages (
     id INT AUTO_INCREMENT PRIMARY KEY,  
     name VARCHAR(150) UNIQUE NOT NULL,
     description TEXT,
-    creation_date DATE DEFAULT CURRENT_DATE,  
+    creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,  
     author_id INT NOT NULL,
     FOREIGN KEY (author_id) REFERENCES authors(id)
 );
 
-
 -- versions table
 CREATE TABLE versions (
-    id SERIAL PRIMARY KEY,
-    package_id INTEGER NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    package_id INT NOT NULL,
     version_number VARCHAR(25) NOT NULL,
-    release_date DATE DEFAULT CURRENT_DATE,
+    release_date DATETIME DEFAULT CURRENT_TIMESTAMP,  
     FOREIGN KEY (package_id) REFERENCES packages(id)
 );
 

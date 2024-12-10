@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="flex justify-center items-center">
             <!-- Illustration -->
             <div class="w-1/3 hidden lg:block">
-                <img src="../../imges/login.png" alt="Illustration" class="w-full">
+
             </div>
             <!-- Form -->
             <div id="loginFormSection" class="bg-black p-10 rounded-lg shadow-md w-full max-w-md">
