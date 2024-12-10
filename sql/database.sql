@@ -1,52 +1,80 @@
+ CREATE DATABASE package_manager;
 
-CREATE TABLE auteurs (
-    id SERIAL PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL,
+
+CREATE TABLE authors (
+    id INT  AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL
 );
-
-CREATE TABLE paquets (
-    id SERIAL PRIMARY KEY,
-    nom VARCHAR(150) UNIQUE NOT NULL,
+-- packages tables
+CREATE TABLE packages (
+    id INT AUTO_INCREMENT PRIMARY KEY,  
+    name VARCHAR(150) UNIQUE NOT NULL,
     description TEXT,
-    date_creation DATE DEFAULT CURRENT_DATE,
-    auteur_id INTEGER NOT NULL,
-    FOREIGN KEY (auteur_id) REFERENCES auteurs(id)
+    creation_date DATE DEFAULT CURRENT_DATE,  
+    author_id INT NOT NULL,
+    FOREIGN KEY (author_id) REFERENCES authors(id)
 );
 
+
+-- versions table
 CREATE TABLE versions (
     id SERIAL PRIMARY KEY,
-    paquet_id INTEGER NOT NULL,
-    numero_version VARCHAR(25) NOT NULL,
-    date_sortie DATE DEFAULT CURRENT_DATE,
-    FOREIGN KEY (paquet_id) REFERENCES paquets(id)
+    package_id INTEGER NOT NULL,
+    version_number VARCHAR(25) NOT NULL,
+    release_date DATE DEFAULT CURRENT_DATE,
+    FOREIGN KEY (package_id) REFERENCES packages(id)
 );
 
 
-CREATE TABLE contributions (
-    paquet_id INTEGER NOT NULL,
-    auteur_id INTEGER NOT NULL,
-    PRIMARY KEY (paquet_id, auteur_id),
-    FOREIGN KEY (paquet_id) REFERENCES paquets(id),
-    FOREIGN KEY (auteur_id) REFERENCES auteurs(id)
-);
-
-INSERT INTO auteurs (nom, email)VALUES
-('Jean Dupont', 'jean.dupont@email.com'),
-('Marie Durand', 'marie.durand@email.com');
-
-
-INSERT INTO paquets (nom, description, auteur_id)VALUES
-('Paquet de calcul', 'Un paquet pour effectuer des calculs mathématiques.', 1),
-('Paquet de gestion de données', 'Un paquet pour gérer des données utilisateurs.', 2);
+INSERT INTO authors (name, email) VALUES
+('Alice Johnson', 'alice.johnson@example.com'),
+('Bob Smith', 'bob.smith@example.com'),
+('Charlie Brown', 'charlie.brown@example.com'),
+('David Green', 'david.green@example.com'),
+('Eva White', 'eva.white@example.com'),
+('Frank Harris', 'frank.harris@example.com'),
+('Grace Lee', 'grace.lee@example.com'),
+('Hannah Miller', 'hannah.miller@example.com'),
+('Isaac Wilson', 'isaac.wilson@example.com'),
+('Jack Davis', 'jack.davis@example.com');
 
 
- INSERT INTO versions (paquet_id, numero_version)VALUES
-(1, '1.0.0'),
-(1, '1.1.0'),
-(2, '2.0.0');
 
-INSERT INTO contributions (paquet_id, auteur_id)VALUES
-(1, 1),
-(1, 2),
-(2, 2);
+INSERT INTO packages (name, description, creation_date, author_id) VALUES
+('express', 'Fast, unopinionated, minimalist web framework for Node.js', '2024-01-01', 1),
+('lodash', 'A modern utility library delivering modularity, performance & extras.', '2024-02-15', 2),
+('react', 'A JavaScript library for building user interfaces', '2024-03-20', 3),
+('axios', 'Promise based HTTP client for the browser and Node.js', '2024-04-10', 4),
+('moment', 'Parse, validate, manipulate, and display dates and times in JavaScript', '2024-05-05', 5),
+('chalk', 'Terminal string styling done right', '2024-06-12', 6),
+('dotenv', 'Loads environment variables from .env for nodejs projects', '2024-07-18', 7),
+('webpack', 'A static module bundler for modern JavaScript applications', '2024-08-22', 8),
+('vue', 'A progressive JavaScript framework for building user interfaces', '2024-09-09', 9),
+('babel', 'A JavaScript compiler for writing next generation JavaScript', '2024-10-25', 10);
+
+
+INSERT INTO versions (package_id, version_number, release_date) VALUES
+(1, '4.18.1', '2024-01-01'),
+(1, '4.18.0', '2024-01-15'),
+(2, '4.17.21', '2024-02-15'),
+(2, '4.17.20', '2024-03-05'),
+(3, '18.2.0', '2024-03-20'),
+(3, '18.1.0', '2024-04-01'),
+(4, '0.21.1', '2024-04-10'),
+(4, '0.21.0', '2024-04-20'),
+(5, '2.29.1', '2024-05-05'),
+(5, '2.29.0', '2024-05-15'),
+(6, '5.2.3', '2024-06-12'),
+(6, '5.2.2', '2024-06-22'),
+(7, '16.0.0', '2024-07-18'),
+(7, '15.9.9', '2024-07-28'),
+(8, '5.74.0', '2024-08-22'),
+(8, '5.73.0', '2024-09-01'),
+(9, '3.2.0', '2024-09-09'),
+(9, '3.1.5', '2024-09-19'),
+(10, '7.8.0', '2024-10-25'),
+(10, '7.7.5', '2024-11-05');
+
+
+
