@@ -28,52 +28,105 @@ $packages = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Ensure smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Fade-in effect */
+        .fade-in {
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+        }
+
+        /* Hover animation */
+        .scale-hover:hover {
+            transform: scale(1.05);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .rotate-hover:hover {
+            transform: rotate(3deg);
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
 </head>
 
-<body class="bg-gray-900 text-gray-100 font-sans">
+<body class="bg-indigo-900 text-gray-200 font-sans">
 
-    <header class="bg-blue-600 text-white p-6 text-center shadow-lg">
-        <h1 class="text-3xl font-bold">Welcome, User!</h1>
+    <header class="bg-teal-600 text-white p-8 text-center shadow-xl rounded-b-lg">
+        <h1 class="text-4xl font-semibold">Hello, User!</h1>
     </header>
 
-    <div class="container mx-auto p-6 mt-6 bg-gray-800 rounded-lg shadow-lg">
-        <a href="logout.php" class="block text-center text-white bg-red-600 py-2 px-4 rounded-lg mb-4 hover:bg-red-700 transition">Logout</a>
-        
-        <!-- Search Bar -->
+    <div class="container mx-auto p-8 mt-8 bg-gray-850 rounded-lg shadow-xl fade-in">
+        <!-- Logout Button -->
         <div class="flex justify-center mb-6">
-            <form method="GET" action="user.php" class="flex">
-                <input type="text" name="query" placeholder="Search packages"
-                    class="w-80 p-3 rounded-l-lg bg-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <a href="logout.php"
+                class="bg-red-500 text-white py-3 px-6 rounded-full shadow-md hover:bg-red-600 transition transform hover:scale-105 scale-hover">Logout</a>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="flex justify-center mb-8">
+            <form method="GET" action="user.php" class="flex space-x-3">
+                <input type="text" name="query" placeholder="Search for packages"
+                    class="w-72 p-3 rounded-lg bg-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
                     value="<?php echo htmlspecialchars($query ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                <button type="submit" class="p-3 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 transition">Search</button>
+                <button type="submit" class="p-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition">Search</button>
             </form>
         </div>
 
         <!-- Add Package Button -->
-        <div class="flex justify-end mb-6">
-            <a href="add_package.php" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">Add Package</a>
+        <div class="flex justify-start mb-6">
+            <a href="add_package.php"
+                class="bg-yellow-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition transform hover:scale-105 rotate-hover">Add
+                New Package</a>
         </div>
 
-        <h2 class="text-xl font-semibold mb-4">Packages</h2>
-        
+        <h2 class="text-2xl font-semibold text-center mb-4">Available Packages</h2>
+
         <!-- Package List -->
-        <ul class="space-y-4">
+        <ul class="space-y-6">
             <?php foreach ($packages as $package): ?>
-                <li class="bg-gray-700 p-6 rounded-lg shadow-md hover:shadow-xl transition">
-                    <h3 class="text-2xl font-semibold"><?php echo htmlspecialchars($package['nom_package'] ?? '', ENT_QUOTES, 'UTF-8'); ?></h3>
-                    <em class="text-sm text-gray-400">Version: <?php echo htmlspecialchars($package['version'] ?? '', ENT_QUOTES, 'UTF-8'); ?></em><br>
-                    <em class="text-sm text-gray-400">Authors: <?php echo htmlspecialchars($package['authors'] ?? '', ENT_QUOTES, 'UTF-8'); ?></em><br>
-                    <p class="mt-4"><?php echo nl2br(htmlspecialchars($package['description'] ?? '', ENT_QUOTES, 'UTF-8')); ?></p>
-                </li>
+            <li class="bg-gray-750 p-6 rounded-lg shadow-lg hover:shadow-2xl transition transform hover:scale-102 fade-in">
+                <h3 class="text-3xl font-bold text-teal-300"><?php echo htmlspecialchars($package['nom_package'] ?? '', ENT_QUOTES, 'UTF-8'); ?></h3>
+                <em class="text-sm text-teal-400">Version: <?php echo htmlspecialchars($package['version'] ?? '', ENT_QUOTES, 'UTF-8'); ?></em><br>
+                <em class="text-sm text-teal-400">Authors: <?php echo htmlspecialchars($package['authors'] ?? '', ENT_QUOTES, 'UTF-8'); ?></em><br>
+                <p class="mt-4 text-gray-300"><?php echo nl2br(htmlspecialchars($package['description'] ?? '', ENT_QUOTES, 'UTF-8')); ?></p>
+            </li>
             <?php endforeach; ?>
         </ul>
     </div>
 
-    <footer class="bg-blue-600 text-white text-center py-4 mt-6">
-        <p>&copy; 2024 Package Management System</p>
+    <footer class="bg-teal-600 text-white text-center py-5 mt-8">
+        <p>&copy; 2024 Package Management System. All Rights Reserved.</p>
     </footer>
+
+    <script>
+        // JavaScript to add the fade-in effect when the page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            const fadeInElements = document.querySelectorAll('.fade-in');
+            fadeInElements.forEach(function (element) {
+                element.classList.add('visible');
+            });
+        });
+
+        // Function to show or hide elements based on scroll position (optional)
+        window.addEventListener('scroll', function () {
+            const elements = document.querySelectorAll('.fade-in');
+            elements.forEach(function (element) {
+                const position = element.getBoundingClientRect();
+                if (position.top < window.innerHeight && position.bottom >= 0) {
+                    element.classList.add('visible');
+                }
+            });
+        });
+    </script>
 
 </body>
 
 </html>
-
