@@ -101,7 +101,6 @@ $packages = $stmt->fetchAll();
             <?php endforeach; ?>
         </ul>
     </div>
-
     <footer class="bg-teal-600 text-white text-center py-5 mt-8">
         <p>&copy; 2024 Package Management System. All Rights Reserved.</p>
     </footer>
