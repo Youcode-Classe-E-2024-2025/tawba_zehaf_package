@@ -15,44 +15,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "All fields are required!";
     } else {
         try {
-            // Begin a transaction
-            $pdo->beginTransaction();
+            // Check if package already exists in the database
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM packages WHERE nom_package = :nom_package");
+            $stmt->execute(['nom_package' => $nom_package]);
+            $package_exists = $stmt->fetchColumn();
 
-            // Insert the package into the 'packages' table
-            $stmt = $pdo->prepare("INSERT INTO packages (nom_package, description) VALUES (:nom_package, :description)");
-            $stmt->execute(['nom_package' => $nom_package, 'description' => $description]);
+            if ($package_exists) {
+                $error = "A package with this name already exists!";
+            } else {
+                // Begin a transaction
+                $pdo->beginTransaction();
 
-            // Get the last inserted package ID
-            $id_package = $pdo->lastInsertId();
+                // Insert the package into the 'packages' table
+                $stmt = $pdo->prepare("INSERT INTO packages (nom_package, description) VALUES (:nom_package, :description)");
+                $stmt->execute(['nom_package' => $nom_package, 'description' => $description]);
 
-            // Insert version into 'versions' table
-            $stmt = $pdo->prepare("INSERT INTO versions (id_package, version, date_release) VALUES (:id_package, :version, :date_release)");
-            $stmt->execute(['id_package' => $id_package, 'version' => $version, 'date_release' => $release_date]);
+                // Get the last inserted package ID
+                $id_package = $pdo->lastInsertId();
 
-            // Insert authors and their emails into 'auteurs' and 'auteurs_packages' tables
-            $authors = explode(',', $authors);  // Expect authors to be comma-separated
-            $emails = explode(',', $emails);    // Expect emails to be comma-separated
+                // Insert version into 'versions' table
+                $stmt = $pdo->prepare("INSERT INTO versions (id_package, version, date_release) VALUES (:id_package, :version, :date_release)");
+                $stmt->execute(['id_package' => $id_package, 'version' => $version, 'date_release' => $release_date]);
 
-            foreach ($authors as $key => $author_name) {
-                $author_name = trim($author_name);
-                $email = isset($emails[$key]) ? trim($emails[$key]) : '';
+                // Insert authors and their emails into 'auteurs' and 'auteurs_packages' tables
+                $authors = explode(',', $authors);  // Expect authors to be comma-separated
+                $emails = explode(',', $emails);    // Expect emails to be comma-separated
 
-                // Insert the author into the 'auteurs' table if they don't exist
-                $stmt = $pdo->prepare("INSERT INTO auteurs (nom_auteur, email) VALUES (:nom_auteur, :email) ON DUPLICATE KEY UPDATE id_auteur=LAST_INSERT_ID(id_auteur)");
-                $stmt->execute(['nom_auteur' => $author_name, 'email' => $email]);
+                foreach ($authors as $key => $author_name) {
+                    $author_name = trim($author_name);
+                    $email = isset($emails[$key]) ? trim($emails[$key]) : '';
 
-                // Get the author ID and link to the package
-                $author_id = $pdo->lastInsertId();
-                $stmt = $pdo->prepare("INSERT INTO auteurs_packages (id_package, id_auteur) VALUES (:id_package, :id_auteur)");
-                $stmt->execute(['id_package' => $id_package, 'id_auteur' => $author_id]);
+                    // Insert the author into the 'auteurs' table if they don't exist
+                    $stmt = $pdo->prepare("INSERT INTO auteurs (nom_auteur, email) VALUES (:nom_auteur, :email) ON DUPLICATE KEY UPDATE id_auteur=LAST_INSERT_ID(id_auteur)");
+                    $stmt->execute(['nom_auteur' => $author_name, 'email' => $email]);
+
+                    // Get the author ID and link to the package
+                    $author_id = $pdo->lastInsertId();
+                    $stmt = $pdo->prepare("INSERT INTO auteurs_packages (id_package, id_auteur) VALUES (:id_package, :id_auteur)");
+                    $stmt->execute(['id_package' => $id_package, 'id_auteur' => $author_id]);
+                }
+
+                // Commit the transaction
+                $pdo->commit();
+
+                // Redirect to the user page after successful addition
+                header("Location: user.php");
+                exit;
             }
-
-            // Commit the transaction
-            $pdo->commit();
-
-            // Redirect to the user page after successful addition
-            header("Location: user.php");
-            exit;
         } catch (Exception $e) {
             // Rollback if there is an error
             $pdo->rollBack();
@@ -60,6 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Fetch all existing packages for the selection dropdown
+$stmt = $pdo->query("SELECT * FROM packages");
+$existing_packages = $stmt->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -112,6 +125,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="emails" class="block text-lg font-semibold">Emails of Authors (comma-separated)</label>
                 <input type="text" id="emails" name="emails" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300" required>
             </div>
+
+            <!-- Existing Packages Dropdown -->
+            <div>
+                <label for="existing_package" class="block text-lg font-semibold">Select Existing Package (Optional)</label>
+                <select id="existing_package" name="existing_package" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300">
+                    <option value="">Select a package...</option>
+                    <?php foreach ($existing_packages as $package): ?>
+                        <option value="<?php echo htmlspecialchars($package['id_package']); ?>"><?php echo htmlspecialchars($package['nom_package']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
             <button type="submit" class="w-full py-3 px-6 bg-teal-600 text-white rounded-lg shadow-md hover:bg-teal-700 transition">Add Package</button>
         </form>
     </div>
