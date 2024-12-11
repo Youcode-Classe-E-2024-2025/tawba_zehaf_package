@@ -18,9 +18,19 @@ $stmt->execute(['query' => "%$query%"]);
 $packages = $stmt->fetchAll();
 
 // Requête pour obtenir le total des packages
-$stmtTotal = $pdo->prepare("SELECT COUNT(*) AS total FROM packages");
-$stmtTotal->execute();
-$totalPackages = $stmtTotal->fetchColumn();
+$stmtTotalPackages = $pdo->prepare("SELECT COUNT(*) AS total FROM packages");
+$stmtTotalPackages->execute();
+$totalPackages = $stmtTotalPackages->fetchColumn();
+
+// Requête pour obtenir le total des auteurs
+$stmtTotalAuthors = $pdo->prepare("SELECT COUNT(DISTINCT a.id_auteur) AS total FROM auteurs a");
+$stmtTotalAuthors->execute();
+$totalAuthors = $stmtTotalAuthors->fetchColumn();
+
+// Requête pour obtenir le total des versions
+$stmtTotalVersions = $pdo->prepare("SELECT COUNT(*) AS total FROM versions");
+$stmtTotalVersions->execute();
+$totalVersions = $stmtTotalVersions->fetchColumn();
 ?>
 
 <!DOCTYPE html>
@@ -92,9 +102,11 @@ $totalPackages = $stmtTotal->fetchColumn();
 
         <h2 class="text-2xl font-semibold text-center mb-4">Available Packages</h2>
 
-        <!-- Total Packages -->
+        <!-- Total Packages, Authors, and Versions -->
         <div class="text-center mb-6">
             <p class="text-lg font-semibold text-teal-300">Total Packages: <?php echo htmlspecialchars($totalPackages, ENT_QUOTES, 'UTF-8'); ?></p>
+            <p class="text-lg font-semibold text-teal-300">Total Authors: <?php echo htmlspecialchars($totalAuthors, ENT_QUOTES, 'UTF-8'); ?></p>
+            <p class="text-lg font-semibold text-teal-300">Total Versions: <?php echo htmlspecialchars($totalVersions, ENT_QUOTES, 'UTF-8'); ?></p>
         </div>
 
         <!-- Package List -->
