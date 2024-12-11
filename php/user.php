@@ -17,7 +17,10 @@ $stmt = $pdo->prepare("
 $stmt->execute(['query' => "%$query%"]);
 $packages = $stmt->fetchAll();
 
-// Output or render your packages here
+// Requête pour obtenir le total des packages
+$stmtTotal = $pdo->prepare("SELECT COUNT(*) AS total FROM packages");
+$stmtTotal->execute();
+$totalPackages = $stmtTotal->fetchColumn();
 ?>
 
 <!DOCTYPE html>
@@ -88,6 +91,11 @@ $packages = $stmt->fetchAll();
         </div>
 
         <h2 class="text-2xl font-semibold text-center mb-4">Available Packages</h2>
+
+        <!-- Total Packages -->
+        <div class="text-center mb-6">
+            <p class="text-lg font-semibold text-teal-300">Total Packages: <?php echo htmlspecialchars($totalPackages, ENT_QUOTES, 'UTF-8'); ?></p>
+        </div>
 
         <!-- Package List -->
         <ul class="space-y-6">
