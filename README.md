@@ -68,3 +68,40 @@ Affichage des Données :
 Liste des packages avec leurs versions.
 
 Liste des auteurs et leurs contributions.
+§§documentation§§
+
+# JS PACKAGES Management System
+
+## Description
+Un système de gestion de packages utilisant PHP et MySQL, configuré pour fonctionner avec Laragon. Ce projet permet aux utilisateurs d'ajouter, de gérer et de suivre des packages, des versions et des auteurs.
+
+## Prérequis
+- [Laragon](https://laragon.org/) (recommandé pour l'environnement local)
+- Navigateur web moderne
+
+## Installation
+
+1. Clonez ce dépôt :
+   ```bash
+   git clone https://github.com/Youcode-Classe-E-2024-2025/tawba_zehaf_package.git
+Déplacez le projet dans le répertoire Laragon :
+C:\laragon\www\jspackages
+Configurez la base de données :
+Créez une base de données dans phpMyAdmin ou HeidiSQL (nom recommandé : jspackages).
+Importez le fichier sql/database.sql pour créer les tables.
+Configurez le fichier php/db.php avec vos informations MySQL :
+php
+
+$host = "localhost";
+$username = "root";
+$password = ""; // Par défaut pour Laragon
+$database = "jspackages";
+Lancez Laragon et accédez au projet dans votre navigateur :
+http://localhost/jspackages/php/
+
+
+Fonctionnalités
+Gestion des auteurs
+Gestion des packages
+Gestion des versions
+Authentification (connexion/déconnexion)
