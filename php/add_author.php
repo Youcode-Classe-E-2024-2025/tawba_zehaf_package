@@ -7,20 +7,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newAuthor = $_POST['new_author'];
         $email = $_POST['email'];
 
-        // Insérer le nouvel auteur dans la base de données
-        $stmt = $pdo->prepare("INSERT INTO auteurs (nom_auteur, email) VALUES (:nom_auteur, :email)");
-        $stmt->execute(['nom_auteur' => $newAuthor, 'email' => $email]);
+        // Vérifier si l'email existe déjà dans la base de données
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM auteurs WHERE email = :email");
+        $stmt->execute(['email' => $email]);
+        $emailExists = $stmt->fetchColumn();
 
-        // Récupérer l'ID du nouvel auteur
-        $authorId = $pdo->lastInsertId();
+        if ($emailExists) {
+            // L'email existe déjà, afficher un message d'erreur
+            echo "This email address is already in use. Please choose another email.";
+        } else {
+            // Insérer le nouvel auteur dans la base de données
+            $stmt = $pdo->prepare("INSERT INTO auteurs (nom_auteur, email) VALUES (:nom_auteur, :email)");
+            $stmt->execute(['nom_auteur' => $newAuthor, 'email' => $email]);
 
-        // Ajouter l'auteur au package (ou effectuer la logique nécessaire)
-        $stmt = $pdo->prepare("INSERT INTO auteurs_packages (id_auteur) VALUES (:author_id)");
-        $stmt->execute(['author_id' => $authorId]);
+            // Récupérer l'ID du nouvel auteur
+            $authorId = $pdo->lastInsertId();
 
-        // Rediriger après l'ajout
-        header("Location: user.php");
-        exit();
+            // Ajouter l'auteur au package (ou effectuer la logique nécessaire)
+            $packageId = 1;  // Remplacez par l'ID réel du package
+            $stmt = $pdo->prepare("INSERT INTO auteurs_packages (id_auteur, id_package) VALUES (:author_id, :package_id)");
+            $stmt->execute(['author_id' => $authorId, 'package_id' => $packageId]);
+
+            // Rediriger après l'ajout
+            header("Location: user.php");
+            exit();
+        }
     }
 }
 ?>
