@@ -92,13 +92,30 @@ $totalVersions = $stmtTotalVersions->fetchColumn();
                 <button type="submit" class="p-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition">Search</button>
             </form>
         </div>
+<!-- Add Package, Add Author, and Add Version Buttons -->
+<div class="flex justify-start mb-6 space-x-4">
+    <!-- Add Package Button -->
+    <a href="add_package.php"
+        class="bg-yellow-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition transform hover:scale-105 rotate-hover">Add
+        New Package</a>
+
+    <!-- Add Author Button -->
+    <a href="add_author.php"
+        class="bg-teal-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-teal-600 transition transform hover:scale-105 rotate-hover">Add
+        New Author</a>
+
+    <!-- Add Version Button -->
+    <a href="add_version.php"
+        class="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-600 transition transform hover:scale-105 rotate-hover">Add
+        New Version</a>
+</div>
 
         <!-- Add Package Button -->
-        <div class="flex justify-start mb-6">
+        <!-- <div class="flex justify-start mb-6">
             <a href="add_package.php"
                 class="bg-yellow-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition transform hover:scale-105 rotate-hover">Add
                 New Package</a>
-        </div>
+        </div> -->
 
         <h2 class="text-2xl font-semibold text-center mb-4">Available Packages</h2>
 

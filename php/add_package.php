@@ -1,78 +1,61 @@
 <?php
 require './db.php';
 
+// Si le formulaire est soumis
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get input values from the form
-    $nom_package = $_POST['nom_package'] ?? '';
-    $description = $_POST['description'] ?? '';
-    $version = $_POST['version'] ?? '';
-    $release_date = $_POST['release_date'] ?? '';  // Added release date
-    $authors = $_POST['authors'] ?? '';
-    $emails = $_POST['emails'] ?? ''; // Added email input for authors
+    // Récupérer les données du formulaire
+    $nomPackage = $_POST['nom_package'];
+    $description = $_POST['description'];
+    
+    // Ajouter le package dans la base de données
+    $stmt = $pdo->prepare("INSERT INTO packages (nom_package, description) VALUES (:nom_package, :description)");
+    $stmt->execute(['nom_package' => $nomPackage, 'description' => $description]);
 
-    // Validate input
-    if (empty($nom_package) || empty($description) || empty($version) || empty($release_date) || empty($authors) || empty($emails)) {
-        $error = "All fields are required!";
-    } else {
-        try {
-            // Check if package already exists in the database
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM packages WHERE nom_package = :nom_package");
-            $stmt->execute(['nom_package' => $nom_package]);
-            $package_exists = $stmt->fetchColumn();
+    // Récupérer l'ID du package ajouté
+    $packageId = $pdo->lastInsertId();
 
-            if ($package_exists) {
-                $error = "A package with this name already exists!";
-            } else {
-                // Begin a transaction
-                $pdo->beginTransaction();
-
-                // Insert the package into the 'packages' table
-                $stmt = $pdo->prepare("INSERT INTO packages (nom_package, description) VALUES (:nom_package, :description)");
-                $stmt->execute(['nom_package' => $nom_package, 'description' => $description]);
-
-                // Get the last inserted package ID
-                $id_package = $pdo->lastInsertId();
-
-                // Insert version into 'versions' table
-                $stmt = $pdo->prepare("INSERT INTO versions (id_package, version, date_release) VALUES (:id_package, :version, :date_release)");
-                $stmt->execute(['id_package' => $id_package, 'version' => $version, 'date_release' => $release_date]);
-
-                // Insert authors and their emails into 'auteurs' and 'auteurs_packages' tables
-                $authors = explode(',', $authors);  // Expect authors to be comma-separated
-                $emails = explode(',', $emails);    // Expect emails to be comma-separated
-
-                foreach ($authors as $key => $author_name) {
-                    $author_name = trim($author_name);
-                    $email = isset($emails[$key]) ? trim($emails[$key]) : '';
-
-                    // Insert the author into the 'auteurs' table if they don't exist
-                    $stmt = $pdo->prepare("INSERT INTO auteurs (nom_auteur, email) VALUES (:nom_auteur, :email) ON DUPLICATE KEY UPDATE id_auteur=LAST_INSERT_ID(id_auteur)");
-                    $stmt->execute(['nom_auteur' => $author_name, 'email' => $email]);
-
-                    // Get the author ID and link to the package
-                    $author_id = $pdo->lastInsertId();
-                    $stmt = $pdo->prepare("INSERT INTO auteurs_packages (id_package, id_auteur) VALUES (:id_package, :id_auteur)");
-                    $stmt->execute(['id_package' => $id_package, 'id_auteur' => $author_id]);
-                }
-
-                // Commit the transaction
-                $pdo->commit();
-
-                // Redirect to the user page after successful addition
-                header("Location: user.php");
-                exit;
-            }
-        } catch (Exception $e) {
-            // Rollback if there is an error
-            $pdo->rollBack();
-            $error = "Error: " . $e->getMessage();
-        }
+    // Ajouter ou sélectionner un auteur
+    if (!empty($_POST['author_id'])) {
+        // Si un auteur existant est sélectionné
+        $authorId = $_POST['author_id'];
+        $stmt = $pdo->prepare("INSERT INTO auteurs_packages (id_auteur, id_package) VALUES (:author_id, :package_id)");
+        $stmt->execute(['author_id' => $authorId, 'package_id' => $packageId]);
+    } elseif (!empty($_POST['new_author'])) {
+        // Si un nouvel auteur est ajouté manuellement
+        $newAuthor = $_POST['new_author'];
+        $stmt = $pdo->prepare("INSERT INTO auteurs (nom_auteur) VALUES (:new_author)");
+        $stmt->execute(['new_author' => $newAuthor]);
+        $authorId = $pdo->lastInsertId();
+        $stmt = $pdo->prepare("INSERT INTO auteurs_packages (id_auteur, id_package) VALUES (:author_id, :package_id)");
+        $stmt->execute(['author_id' => $authorId, 'package_id' => $packageId]);
     }
+
+    // Ajouter ou sélectionner une version
+    if (!empty($_POST['version'])) {
+        // Si une version existante est sélectionnée
+        $version = $_POST['version'];
+        $stmt = $pdo->prepare("INSERT INTO versions (id_package, version) VALUES (:package_id, :version)");
+        $stmt->execute(['package_id' => $packageId, 'version' => $version]);
+    } elseif (!empty($_POST['new_version'])) {
+        // Si une nouvelle version est ajoutée manuellement
+        $newVersion = $_POST['new_version'];
+        $stmt = $pdo->prepare("INSERT INTO versions (id_package, version) VALUES (:package_id, :new_version)");
+        $stmt->execute(['package_id' => $packageId, 'new_version' => $newVersion]);
+    }
+
+    // Rediriger après l'ajout
+    header("Location: user.php");
+    exit();
 }
 
-// Fetch all existing packages for the selection dropdown
-$stmt = $pdo->query("SELECT * FROM packages");
-$existing_packages = $stmt->fetchAll();
+// Récupérer la liste des auteurs et des versions depuis la base de données
+$stmtAuthors = $pdo->prepare("SELECT * FROM auteurs");
+$stmtAuthors->execute();
+$authors = $stmtAuthors->fetchAll();
+
+$stmtVersions = $pdo->prepare("SELECT DISTINCT version FROM versions");
+$stmtVersions->execute();
+$versions = $stmtVersions->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -81,69 +64,73 @@ $existing_packages = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New Package</title>
+    <title>Add Package</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-indigo-900 text-gray-200 font-sans">
+
     <header class="bg-teal-600 text-white p-8 text-center shadow-xl rounded-b-lg">
         <h1 class="text-4xl font-semibold">Add New Package</h1>
     </header>
 
     <div class="container mx-auto p-8 mt-8 bg-gray-850 rounded-lg shadow-xl">
-        <div class="flex justify-center mb-6">
-            <a href="user.php" class="bg-gray-500 text-white py-3 px-6 rounded-full shadow-md hover:bg-gray-600 transition">Back to Dashboard</a>
-        </div>
-
-        <?php if (!empty($error)): ?>
-            <div class="text-red-500 text-center mb-6"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
-        <?php endif; ?>
-
-        <!-- Add Package Form -->
-        <form method="POST" action="add_package.php" class="space-y-6">
+        <form method="POST" class="space-y-6">
+            <!-- Nom du package -->
             <div>
-                <label for="nom_package" class="block text-lg font-semibold">Package Name</label>
-                <input type="text" id="nom_package" name="nom_package" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300" required>
-            </div>
-            <div>
-                <label for="description" class="block text-lg font-semibold">Description</label>
-                <textarea id="description" name="description" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300" required></textarea>
-            </div>
-            <div>
-                <label for="version" class="block text-lg font-semibold">Version</label>
-                <input type="text" id="version" name="version" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300" required>
-            </div>
-            <div>
-                <label for="release_date" class="block text-lg font-semibold">Release Date</label>
-                <input type="date" id="release_date" name="release_date" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300" required>
-            </div>
-            <div>
-                <label for="authors" class="block text-lg font-semibold">Authors (comma-separated)</label>
-                <input type="text" id="authors" name="authors" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300" required>
-            </div>
-            <div>
-                <label for="emails" class="block text-lg font-semibold">Emails of Authors (comma-separated)</label>
-                <input type="text" id="emails" name="emails" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300" required>
+                <label for="nom_package" class="text-lg font-semibold text-teal-300">Package Name</label>
+                <input type="text" name="nom_package" id="nom_package" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500" required>
             </div>
 
-            <!-- Existing Packages Dropdown -->
+            <!-- Description du package -->
             <div>
-                <label for="existing_package" class="block text-lg font-semibold">Select Existing Package (Optional)</label>
-                <select id="existing_package" name="existing_package" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300">
-                    <option value="">Select a package...</option>
-                    <?php foreach ($existing_packages as $package): ?>
-                        <option value="<?php echo htmlspecialchars($package['id_package']); ?>"><?php echo htmlspecialchars($package['nom_package']); ?></option>
+                <label for="description" class="text-lg font-semibold text-teal-300">Description</label>
+                <textarea name="description" id="description" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500" rows="4" required></textarea>
+            </div>
+
+            <!-- Sélectionner un auteur ou ajouter un auteur manuellement -->
+            <div>
+                <label for="author_id" class="text-lg font-semibold text-teal-300">Select Author</label>
+                <select name="author_id" id="author_id" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <option value="">-- Select an Author --</option>
+                    <?php foreach ($authors as $author): ?>
+                        <option value="<?php echo htmlspecialchars($author['id_auteur'], ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php echo htmlspecialchars($author['nom_auteur'], ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
+
+                <div class="mt-4">
+                    <label for="new_author" class="text-lg font-semibold text-teal-300">Or Add New Author</label>
+                    <input type="text" name="new_author" id="new_author" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Enter new author name">
+                </div>
             </div>
 
-            <button type="submit" class="w-full py-3 px-6 bg-teal-600 text-white rounded-lg shadow-md hover:bg-teal-700 transition">Add Package</button>
+            <!-- Sélectionner une version ou ajouter une version manuellement -->
+            <div>
+                <label for="version" class="text-lg font-semibold text-teal-300">Select Version</label>
+                <select name="version" id="version" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <option value="">-- Select a Version --</option>
+                    <?php foreach ($versions as $version): ?>
+                        <option value="<?php echo htmlspecialchars($version['version'], ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php echo htmlspecialchars($version['version'], ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <div class="mt-4">
+                    <label for="new_version" class="text-lg font-semibold text-teal-300">Or Add New Version</label>
+                    <input type="text" name="new_version" id="new_version" class="w-full p-3 rounded-lg bg-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Enter new version">
+                </div>
+            </div>
+
+            <!-- Bouton pour soumettre le formulaire -->
+            <button type="submit" class="bg-teal-600 text-white py-3 px-6 rounded-lg hover:bg-teal-700 transition">
+                Add Package
+            </button>
         </form>
     </div>
 
-    <footer class="bg-teal-600 text-white text-center py-5 mt-8">
-        <p>&copy; 2024 Package Management System. All Rights Reserved.</p>
-    </footer>
 </body>
 
 </html>
